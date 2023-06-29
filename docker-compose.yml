@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  anagram-finder:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      image: anagram-finder:latest
+      container_name: anagram-finder
+      volumes:
+        - ./data:/data
+      ports:
+        - "8080:8080"
+      restart: unless-stopped
+      networks:
+        - anagram-finder
+
+networks:
+  anagram-finder:
