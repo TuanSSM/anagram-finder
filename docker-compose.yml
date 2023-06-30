@@ -7,7 +7,7 @@ services:
       image: anagram-finder:latest
       container_name: anagram-finder
       volumes:
-        - ./data:/data
+        - ./app/data:/data
       ports:
         - "8080:8080"
       restart: unless-stopped
