@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anagram-finder-deployment
+  labels:
+    app: anagram-finder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anagram-finder
+  template:
+    metadata:
+      labels:
+        app: anagram-finder
+    spec:
+      containers:
+        - name: anagram-finder
+          # TODO change image registry later
+          image: localhost:5000/anagram-finder:29june
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
