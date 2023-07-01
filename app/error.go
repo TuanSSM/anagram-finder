@@ -2,4 +2,6 @@ package main
 
 import "errors"
 
-var ErrNotFound = errors.New("Datasource Not Found")
+var ErrDataSourceNotFound = errors.New("Datasource not found in datasources.csv")
+
+var ErrDataSourceFileAccess = errors.New("Datasource file could not be opened")

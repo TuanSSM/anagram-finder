@@ -1,14 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"math/big"
 	"os"
+	"path/filepath"
 	"sync"
 )
 
 type AnagramFinder interface {
-	FindAnagrams(wordsFile string) [][]string
+	FindAnagrams(wordsFile string) ([][]string, error)
 }
 
 type PrimeMultiplication struct {
@@ -16,8 +18,30 @@ type PrimeMultiplication struct {
 	Settings AnagramSettings
 }
 
-func (solver PrimeMultiplication) FindAnagrams() [][]string {
+func (solver PrimeMultiplication) FindAnagrams() ([][]string, error) {
+	fPath := solver.Settings.DataSource.FilePath()
+	file, err := os.Open(fPath)
+	if err != nil {
+		return nil, ErrDataSourceFileAccess
+	}
+	defer file.Close()
 
+	scanner := bufio.NewScanner(file)
+
+	var wg sync.WaitGroup
+	for scanner.Scan() {
+		wg.Add(1)
+		go solver.ProcessLine(scanner.Text(), &wg)
+	}
+	wg.Wait()
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	// placeholder
+	res := [][]string{{}}
+	return res, nil
 }
 
 func (solver PrimeMultiplication) ProcessLine(s string, wg *sync.WaitGroup) {
@@ -38,8 +62,6 @@ func (solver PrimeMultiplication) MultiplyLetters(s string) *big.Int {
 		if char >= 'a' && char <= 'z' {
 			factor := big.NewInt(int64(solver.PrimeMap[char]))
 			product.Mul(product, factor)
-		} else {
-			product.Mul(product, big.NewInt(1))
 		}
 	}
 
@@ -47,11 +69,13 @@ func (solver PrimeMultiplication) MultiplyLetters(s string) *big.Int {
 }
 
 func (solver PrimeMultiplication) AppendResultFile(anagram string, r *big.Int) {
-	fileName := fmt.Sprintf("data/%s", r.String())
+	fileName := fmt.Sprintf("%s/%s", solver.Settings.WorkDir(), r.String())
 	f, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		// TODO change this
-		panic(err)
+		if err := os.MkdirAll(filepath.Dir(fileName), 0770); err != nil {
+			panic(err)
+		}
+		solver.AppendResultFile(anagram, r)
 	}
 	defer f.Close()
 	fmt.Fprintf(f, "%v\n", anagram)

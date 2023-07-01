@@ -16,22 +16,22 @@
         </form>
         <hr>
         <h2>Data Sources</h2>
-        <form action="/findanagrams" method="post">
+        <form action="/solve" method="post">
             <ul>
                 {{ range $ds := .Datasources }}
                 <li>
-                    <input type="radio" id="{{$ds.UUID}}" name="datasource" value="{{$ds.UUID}}">
+                    <input type="radio" id="{{$ds.UUID}}" name="dictionaryId" value="{{$ds.UUID}}">
                     <label for="{{$ds.UUID}}">{{$ds.Name}}</label>
-                    <a href="/datasource/{{$ds.UUID}}" class="view-datasource">Show</a>
+                    <a href="/datasource/{{$ds.UUID}}/content" class="view-datasource">Show</a>
                 </li>
                 {{ end }}
             </ul>
-            <select name="algorithm">
-                <option value="PrimeAlgo">PrimeAlgo</option>
-                <option value="HashAlgo">HashAlgo</option>
+            <select name="algo">
+                <option value="PrimeMultiplication">Prime Multiplication</option>
+                <option value="SortedHash">Sorted Hash</option>
             </select>
             <input type="number" name="maxWords" min="1" placeholder="Max Words">
-            <input type="number" name="maxWordLength" min="1" placeholder="Max Word Length">
+            <input type="number" name="maxLength" min="1" placeholder="Max Word Length">
             <input type="submit" value="Find Anagrams">
         </form>
     </div>

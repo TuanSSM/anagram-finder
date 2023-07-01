@@ -67,17 +67,22 @@ func (s *AnagramService) GetDataSource(uuid string) (*DataSource, error) {
 		}
 	}
 
-	return nil, ErrNotFound
+	return nil, ErrDataSourceNotFound
 }
 
 func (s *AnagramService) GetDataSourceContent(uuid string) ([]string, error) {
 	ds, err := s.GetDataSource(uuid)
-	fPath := ds.FilePath()
-	f, err := os.Open(fPath)
 	if err != nil {
 		return nil, err
 	}
+
+	fPath := ds.FilePath()
+	f, err := os.Open(fPath)
+	if err != nil {
+		return nil, ErrDataSourceFileAccess
+	}
 	defer f.Close()
+
 	var lines []string
 	scanner := bufio.NewScanner(f)
 
@@ -133,7 +138,7 @@ func (s *AnagramService) FindAnagrams(req *FindAnagramsRequest) ([][]string, err
 		return nil, err
 	}
 
-	as := NewAnagramSettings(ds, req.MaxWords, req.MaxLength)
+	as := NewAnagramSettings(ds, req.Algo, req.MaxWords, req.MaxLength)
 
 	primeSolver := PrimeMultiplication{
 		PrimeMap: map[rune]int{
@@ -146,6 +151,10 @@ func (s *AnagramService) FindAnagrams(req *FindAnagramsRequest) ([][]string, err
 		Settings: *as,
 	}
 
-	res := primeSolver.FindAnagrams()
+	res, err := primeSolver.FindAnagrams()
+	if err != nil {
+		return nil, err
+	}
+
 	return res, nil
 }

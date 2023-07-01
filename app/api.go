@@ -37,7 +37,9 @@ func (s *ApiServer) Start(listenAddr string) error {
 	datasourceApp.Get("/:uuid/content", s.handleGetDataSourceContent)
 	//datasourceApp.Get("/:dictId/metrics", s.svc.getDictionaryMetrics)
 	datasourceApp.Post("", s.handleGrabDataSource)
-	datasourceApp.Post("/findAnagrams", s.handleFindAnagrams)
+
+	app.Post("/solve", s.handleFindAnagrams)
+
 	err := app.Listen(listenAddr)
 
 	return err
@@ -80,7 +82,7 @@ func (s *ApiServer) handleGrabDataSource(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusUnprocessableEntity).SendString(err.Error())
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(res)
+	return ctx.Render("index", res) //ctx.Status(fiber.StatusOK).JSON(res)
 }
 
 func (s *ApiServer) handleFindAnagrams(ctx *fiber.Ctx) error {
