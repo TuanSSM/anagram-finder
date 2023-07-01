@@ -11,8 +11,10 @@ import (
 
 type Service interface {
 	GetAllDataSources() ([]DataSource, error)
-	GetDataSource(uuid string) ([]string, error)
+	GetDataSource(uuid string) (*DataSource, error)
+	GetDataSourceContent(uuid string) ([]string, error)
 	GrabDataSource(req *GrabDataSourceRequest) (*DataSource, error)
+	FindAnagrams(req *FindAnagramsRequest) ([][]string, error)
 }
 
 type AnagramService struct{}
@@ -22,7 +24,7 @@ func NewAnagramService() Service {
 }
 
 func (s *AnagramService) GetAllDataSources() ([]DataSource, error) {
-	dsFile := "data/datasources.csv"
+	dsFile := "./app/data/datasources.csv"
 
 	err := createFileIfDNE(dsFile)
 	if err != nil {
@@ -53,19 +55,25 @@ func (s *AnagramService) GetAllDataSources() ([]DataSource, error) {
 	return dataSources, nil
 }
 
-func (s *AnagramService) GetDataSource(uuid string) ([]string, error) {
+func (s *AnagramService) GetDataSource(uuid string) (*DataSource, error) {
 	dataSources, err := s.GetAllDataSources()
 	if err != nil {
 		return nil, err
 	}
 
-	var filePath string
 	for _, ds := range dataSources {
 		if ds.UUID == uuid {
-			filePath = ds.FilePath()
+			return &ds, nil
 		}
 	}
-	f, err := os.Open(filePath)
+
+	return nil, ErrNotFound
+}
+
+func (s *AnagramService) GetDataSourceContent(uuid string) ([]string, error) {
+	ds, err := s.GetDataSource(uuid)
+	fPath := ds.FilePath()
+	f, err := os.Open(fPath)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +109,7 @@ func (s *AnagramService) GrabDataSource(req *GrabDataSourceRequest) (*DataSource
 
 	dataSources = append(dataSources, *dataSource)
 
-	file, err := os.OpenFile("data/datasources.csv", os.O_WRONLY|os.O_CREATE, 0666)
+	file, err := os.OpenFile("./app/data/datasources.csv", os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err
 	}
@@ -117,4 +125,27 @@ func (s *AnagramService) GrabDataSource(req *GrabDataSourceRequest) (*DataSource
 	}
 
 	return dataSource, nil
+}
+
+func (s *AnagramService) FindAnagrams(req *FindAnagramsRequest) ([][]string, error) {
+	ds, err := s.GetDataSource(req.DictionaryId)
+	if err != nil {
+		return nil, err
+	}
+
+	as := NewAnagramSettings(ds, req.MaxWords, req.MaxLength)
+
+	primeSolver := PrimeMultiplication{
+		PrimeMap: map[rune]int{
+			'e': 2, 's': 3, 'i': 5, 'a': 7, 'r': 11, 'n': 13,
+			't': 17, 'o': 19, 'l': 23, 'c': 29, 'd': 31,
+			'u': 37, 'g': 41, 'p': 43, 'm': 47, 'h': 53,
+			'b': 59, 'y': 61, 'f': 67, 'v': 71, 'k': 73,
+			'w': 79, 'z': 83, 'x': 89, 'j': 97, 'q': 101,
+		},
+		Settings: *as,
+	}
+
+	res := primeSolver.FindAnagrams()
+	return res, nil
 }

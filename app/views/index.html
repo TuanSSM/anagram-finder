@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anagram Finder</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Anagram Finder</h1>
+        <form action="/datasource" method="post">
+            <input type="text" name="rawUrl" placeholder="Enter URL">
+            <input type="text" name="name" placeholder="Enter Name">
+            <input type="submit" value="Add Datasource">
+        </form>
+        <hr>
+        <h2>Data Sources</h2>
+        <form action="/findanagrams" method="post">
+            <ul>
+                {{ range $ds := .Datasources }}
+                <li>
+                    <input type="radio" id="{{$ds.UUID}}" name="datasource" value="{{$ds.UUID}}">
+                    <label for="{{$ds.UUID}}">{{$ds.Name}}</label>
+                    <a href="/datasource/{{$ds.UUID}}" class="view-datasource">Show</a>
+                </li>
+                {{ end }}
+            </ul>
+            <select name="algorithm">
+                <option value="PrimeAlgo">PrimeAlgo</option>
+                <option value="HashAlgo">HashAlgo</option>
+            </select>
+            <input type="number" name="maxWords" min="1" placeholder="Max Words">
+            <input type="number" name="maxWordLength" min="1" placeholder="Max Word Length">
+            <input type="submit" value="Find Anagrams">
+        </form>
+    </div>
+</body>
+</html>

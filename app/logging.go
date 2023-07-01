@@ -23,12 +23,19 @@ func (s *LoggingService) GetAllDataSources() (res []DataSource, err error) {
 	return s.next.GetAllDataSources()
 }
 
-func (s *LoggingService) GetDataSource(uuid string) (res []string, err error) {
+func (s *LoggingService) GetDataSource(uuid string) (ds *DataSource, err error) {
+	defer func(start time.Time) {
+	}(time.Now())
+
+	return s.next.GetDataSource(uuid)
+}
+
+func (s *LoggingService) GetDataSourceContent(uuid string) (res []string, err error) {
 	defer func(start time.Time) {
 		fmt.Printf("INFO | Datasource has %v lines\n", len(res))
 	}(time.Now())
 
-	return s.next.GetDataSource(uuid)
+	return s.next.GetDataSourceContent(uuid)
 }
 
 func (s *LoggingService) GrabDataSource(req *GrabDataSourceRequest) (ds *DataSource, err error) {
@@ -37,4 +44,12 @@ func (s *LoggingService) GrabDataSource(req *GrabDataSourceRequest) (ds *DataSou
 	}(time.Now())
 
 	return s.next.GrabDataSource(req)
+}
+
+func (s *LoggingService) FindAnagrams(req *FindAnagramsRequest) (res [][]string, err error) {
+	defer func(start time.Time) {
+		// TODO
+	}(time.Now())
+
+	return s.next.FindAnagrams(req)
 }
