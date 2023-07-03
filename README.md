@@ -53,10 +53,12 @@ By making use of Fundamental Theorem of Algebra,
 
 ### Part 3
 
-1. Write singleton anagrams (only one word) to a file with unique anagram identifier, one word per line.
-2. Generate 2 word anagrams, repeat same write procedure with a combined anagram per line in a directory with name number of words
+DB connection will be implemented
+
+1. Write singleton anagrams (only one word) ~~to a file with unique anagram identifier, one word per line.~~
+2. Generate 2 word anagrams, repeat same write procedure with a combined anagram ~~per line in a directory with name number of words~~
 3. By making use of last generated n word anagrams and singleton anagrams, generate n+1 word anagrams.
-4. Squash files with same name as lines with a delimeter `,` to a single result file
+4. ~~Squash files with same name as lines with a delimeter to a single result file~~
 
 ## Building
 
@@ -88,6 +90,7 @@ docker-compose up -d
  + [x] API
    - [x] `DataSource` handlers
    - [x] `FindAnagrams` handler
+ + [ ] Mongodb
  + [ ] Unit Test
  + [ ] Bounded concurrency, semaphores
 - [ ] Kubernetes
