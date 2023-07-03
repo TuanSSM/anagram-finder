@@ -18,7 +18,27 @@ API takes a JSON Request object for fetching new datasource.
 
 API takes a JSON Request object for finding anagrams.
 
-- By iterating over content...
+- By iterating over content lines....
+
+## Building
+
+### Running with Makefile
+
+```bash
+make run
+```
+
+### Running with Docker
+
+```bash
+docker-compose up -d
+```
+
+### Running with Kubernetes
+
+```bash
+
+```
 
 ## TODO
 
