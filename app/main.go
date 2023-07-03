@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 )
 
 func main() {
@@ -9,5 +10,6 @@ func main() {
 	svc = NewLoggingService(svc)
 
 	apiServer := NewApiServer(svc)
-	log.Fatal(apiServer.Start(":8080"))
+	var listenAddr string = ":" + os.Getenv("ANAGRAM_FINDER_API_PORT")
+	log.Fatal(apiServer.Start(listenAddr))
 }

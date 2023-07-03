@@ -4,15 +4,18 @@ services:
       build:
         context: .
         dockerfile: Dockerfile
-      image: anagram-finder:latest
+      image: localhost:5000/anagram-finder:latest
       container_name: anagram-finder
       volumes:
         - ./app/data:/data
+      env_file:
+        - .env
       ports:
-        - "8080:8080"
+        - "${ANAGRAM_FINDER_API_PORT:-3000}:${ANAGRAM_FINDER_API_PORT:-3000}"
       restart: unless-stopped
       networks:
         - anagram-finder
 
 networks:
   anagram-finder:
+    external: true

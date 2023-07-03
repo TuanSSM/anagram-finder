@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -13,13 +14,13 @@ type AnagramFinder interface {
 	FindAnagrams(wordsFile string) ([][]string, error)
 }
 
-type PrimeMultiplication struct {
-	PrimeMap map[rune]int
-	Settings AnagramSettings
+type BaseAlgorithm struct {
+	LetterFrequencyDescending []rune
+	Settings                  AnagramSettings
 }
 
-func (solver PrimeMultiplication) FindAnagrams() ([][]string, error) {
-	fPath := solver.Settings.DataSource.FilePath()
+func (finder BaseAlgorithm) ScanDataSource() (*bufio.Scanner, error) {
+	fPath := finder.Settings.DataSource.FilePath()
 	file, err := os.Open(fPath)
 	if err != nil {
 		return nil, ErrDataSourceFileAccess
@@ -28,10 +29,85 @@ func (solver PrimeMultiplication) FindAnagrams() ([][]string, error) {
 
 	scanner := bufio.NewScanner(file)
 
+	return scanner, nil
+}
+
+func (finder BaseAlgorithm) CombineLines(lines1, lines2 []string) []string {
+	var combinations []string
+	for _, line1 := range lines1 {
+		for _, line2 := range lines2 {
+			combinations = append(combinations, line1+" "+line2)
+		}
+	}
+	return combinations
+}
+
+func (finder BaseAlgorithm) AppendResultFile(anagrams []string, r *big.Int) {
+	nComb := len(anagrams[0])
+	var fPath string
+	// Seperate anagrams by number of words contained
+	if nComb == 1 {
+		fPath = fmt.Sprintf("%s/%s", finder.Settings.WorkDir(), r.String())
+	} else {
+		fPath = fmt.Sprintf("%s/%d/%s", finder.Settings.WorkDir(), nComb, r.String())
+	}
+
+	AppendFile(fPath, anagrams)
+}
+
+func (finder BaseAlgorithm) SquashResultFiles() ([][]string, error) {
+	wd := finder.Settings.WorkDir()
+	filepath.Walk(wd, func(path string, info os.FileInfo, err error) error {
+		//
+		if info.IsDir() {
+			filepath.Walk(filepath.Join(wd, info.Name()), func(path string, childInfo os.FileInfo, err error) error {
+
+				return nil
+			})
+			return nil
+		}
+
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		newPath := filepath.Join(wd, info.Name())
+		err = ioutil.WriteFile(newPath, data, info.Mode())
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+//
+//type BitwiseMatch struct {
+//	LetterFrequencyDescending []rune
+//	Settings AnagramSettings
+//}
+//
+//func (finder BitwiseMatch) FindAnagrams() ([][]string, error) {}
+//func (finder BitwiseMatch) ProcessLine()
+//func (finder BitwiseMatch) EncodeLettersToBitsAndWeights()
+//func (finder BitwiseMatch) CombineAnagrams()
+
+type PrimeMultiplication struct {
+	BaseAlgorithm
+	PrimeMap map[rune]int
+}
+
+func (finder PrimeMultiplication) FindAnagrams() ([][]string, error) {
+	scanner, err := finder.BaseAlgorithm.ScanDataSource()
+	if err != nil {
+		return nil, err
+	}
+
 	var wg sync.WaitGroup
 	for scanner.Scan() {
 		wg.Add(1)
-		go solver.ProcessLine(scanner.Text(), &wg)
+		go finder.ProcessLine(scanner.Text(), &wg)
 	}
 	wg.Wait()
 
@@ -39,28 +115,34 @@ func (solver PrimeMultiplication) FindAnagrams() ([][]string, error) {
 		return nil, err
 	}
 
+	for i := 1; i < finder.BaseAlgorithm.Settings.MaxWords; i++ {
+		go func() {
+			finder.CombineResultFiles()
+		}()
+	}
+
 	// placeholder
 	res := [][]string{{}}
 	return res, nil
 }
 
-func (solver PrimeMultiplication) ProcessLine(s string, wg *sync.WaitGroup) {
+func (finder PrimeMultiplication) ProcessLine(s string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	primeLetters := solver.Settings.RegExp.ReplaceAllString(s, "")
+	primeLetters := finder.BaseAlgorithm.Settings.RegExp.ReplaceAllString(s, "")
 
-	if len(primeLetters) <= solver.Settings.MaxLength {
-		product := solver.MultiplyLetters(s)
-		solver.AppendResultFile(s, product)
+	if len(primeLetters) <= finder.BaseAlgorithm.Settings.MaxLength {
+		product := finder.MultiplyLetters(s)
+		finder.BaseAlgorithm.AppendResultFile([]string{s}, product)
 	}
 }
 
-func (solver PrimeMultiplication) MultiplyLetters(s string) *big.Int {
+func (finder PrimeMultiplication) MultiplyLetters(s string) *big.Int {
 	product := big.NewInt(1)
 	for _, char := range s {
 		// Multiply letters by given PrimeMap value
 		if char >= 'a' && char <= 'z' {
-			factor := big.NewInt(int64(solver.PrimeMap[char]))
+			factor := big.NewInt(int64(finder.PrimeMap[char]))
 			product.Mul(product, factor)
 		}
 	}
@@ -68,35 +150,33 @@ func (solver PrimeMultiplication) MultiplyLetters(s string) *big.Int {
 	return product
 }
 
-func (solver PrimeMultiplication) AppendResultFile(anagram string, r *big.Int) {
-	fileName := fmt.Sprintf("%s/%s", solver.Settings.WorkDir(), r.String())
-	f, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		if err := os.MkdirAll(filepath.Dir(fileName), 0770); err != nil {
-			panic(err)
-		}
-		solver.AppendResultFile(anagram, r)
-	}
-	defer f.Close()
-	fmt.Fprintf(f, "%v\n", anagram)
+func (finder PrimeMultiplication) CombineAnagrams(res1, res2 string) { //([]string, *big.Int) {
+	product := big.NewInt(1)
+	factor1, _ := new(big.Int).SetString(res1, 10)
+	factor2, _ := new(big.Int).SetString(res2, 10)
+	product.Mul(factor1, factor2)
+
+	wd := finder.BaseAlgorithm.Settings.WorkDir()
+	lines1, _ := ReadFile(filepath.Join(wd, res1))
+	lines2, _ := ReadFile(filepath.Join(wd, res2))
+
+	results := finder.BaseAlgorithm.CombineLines(lines1, lines2)
+	finder.BaseAlgorithm.AppendResultFile(results, product)
 }
 
-//func Combinations(list []string, combinationLength int) []string {
-//    if combinationLength > len(list) {
-//		return []string{}
-//	}
-//	result := []string{}
-//	combine(list, combinationLength, 0, []string{}, &result)
-//	return result
-//}
-//
-//func combine(list []string, combinationLength int, start int, currentCombination []string, result *[]string) {
-//	if combinationLength == 0 {
-//		*result = append(*result, strings.Join(currentCombination, " "))
-//		return
-//	}
-//	for i := start; i <= len(list)-combinationLength; i++ {
-//		combine(list, combinationLength-1, i+1, append(currentCombination, list[i]), result)
-//	}
-//}
-//
+func (finder PrimeMultiplication) CombineResultFiles() error {
+	wd := finder.BaseAlgorithm.Settings.WorkDir()
+	fs, err := ioutil.ReadDir(wd)
+	if err != nil {
+		return err
+	}
+
+	for _, f1 := range fs {
+		for _, f2 := range fs[1:] {
+			go finder.CombineAnagrams(f1.Name(), f2.Name())
+		}
+
+	}
+
+	return err
+}

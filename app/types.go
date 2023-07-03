@@ -22,12 +22,12 @@ func NewDataSource(name string, rawUrl string) *DataSource {
 	}
 }
 
-func (ds DataSource) FilePath() string {
-	return "./app/data/" + ds.UUID + "/" + ds.Name
+func (ds DataSource) DirPath() string {
+	return "./app/data/" + ds.UUID + "/"
 }
 
-func (ds DataSource) DirName() string {
-	return "./app/data/" + ds.UUID
+func (ds DataSource) FilePath() string {
+	return ds.DirPath() + ds.Name
 }
 
 type DataSourcesResponse struct {
@@ -70,6 +70,6 @@ func NewAnagramSettings(ds *DataSource, algo string, mw int, ml int) *AnagramSet
 }
 
 func (as AnagramSettings) WorkDir() string {
-	wd := fmt.Sprintf("/work/%s_%d_%d", as.Algo, as.MaxWords, as.MaxLength)
-	return as.DataSource.DirName() + wd
+	wd := fmt.Sprintf("work/%s_%d_%d", as.Algo, as.MaxWords, as.MaxLength)
+	return as.DataSource.DirPath() + wd
 }
