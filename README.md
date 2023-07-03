@@ -2,7 +2,7 @@
 
 ## Description
 
-Task description can be found [here](Platform Engineer Case Description-Anagram.pdf).
+Task description can be found [here](Platform%20Engineer%20Case%20Description-Anagram.pdf).
 
 ## Project
 
