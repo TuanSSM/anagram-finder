@@ -24,9 +24,9 @@ API takes a JSON Request object for finding anagrams.
 
 - [ ] App
  + [ ] Strategies
-   [x] `PrimeMultiplication`
-   [ ] `BitwiseMatching`
-   [ ] ~~LettersSorted~~
+   - [x] `PrimeMultiplication`
+   - [ ] `BitwiseMatching`
+   - [ ] ~~LettersSorted~~
  + [x] API
    - [x] `DataSource` handlers
    - [x] `FindAnagrams` handler
