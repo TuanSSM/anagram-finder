@@ -32,7 +32,7 @@ By making use of Fundamental Theorem of Algebra,
 + Multiply each letter with it's corresponding prime number, in order to obtain an unique number for equivalent anagrams
 
 + Pros
-  - Does not need a sorting
+  - Does not need sorting
 + Cons
   - Unique numbers get exponentially larger as anagrams spread into words
 
@@ -95,7 +95,7 @@ docker-compose up -d
   + [x] Kubernetes configuration
   + [ ] Helm chart
 - [ ] Further Improvements
-  + [ ] README.md
+  + [x] README.md
   + [ ] Linting
   + [ ] Swagger
   + [ ] `Bombardier` benchmark
