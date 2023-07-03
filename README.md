@@ -20,27 +20,24 @@ API takes a JSON Request object for finding anagrams.
 
 - By iterating over content...
 
-#### Valid Edge Cases
-
-##### Empty
-
 ## TODO
 
-- [] App
- + [] Strategies
-   - [x] `PrimeMultiplication`
-   - [] `BitwiseMatching`
-   - [] ~~LettersSorted~~
+- [ ] App
+ + [ ] Strategies
+   [x] `PrimeMultiplication`
+   [ ] `BitwiseMatching`
+   [ ] ~~LettersSorted~~
  + [x] API
    - [x] `DataSource` handlers
    - [x] `FindAnagrams` handler
- + [] Unit Test
-- [] Kubernetes
+ + [ ] Unit Test
+ + [ ] Bounded concurrency, semaphores
+- [ ] Kubernetes
   + [x] Minimal Docker image
   + [x] Kubernetes configuration
-  + [] Helm chart
-- [] Further Improvements
-  + [] Update README.md
-  + [] Linting
-  + [] Swagger
-  + [] `Bombardier` benchmark
+  + [ ] Helm chart
+- [ ] Further Improvements
+  + [ ] README.md
+  + [ ] Linting
+  + [ ] Swagger
+  + [ ] `Bombardier` benchmark
