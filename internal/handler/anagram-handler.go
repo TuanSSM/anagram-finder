@@ -1,28 +1,31 @@
-package main
+package handler
 
 import (
 	"context"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/tuanssm/anagram-finder/internal/manager"
+	"github.com/tuanssm/anagram-finder/internal/store"
+	"github.com/tuanssm/anagram-finder/internal/types"
 )
 
 type AnagramHandler struct {
-	store AnagramStore
+	store store.AnagramStore
 }
 
-func NewAnagramHandler(aStore AnagramStore) *AnagramHandler {
+func NewAnagramHandler(aStore store.AnagramStore) *AnagramHandler {
 	return &AnagramHandler{
 		store: aStore,
 	}
 }
 
 func (a *AnagramHandler) HandleFetchAnagramsFromUrl(c *fiber.Ctx) error {
-	req := &FindAnagramsRequest{}
+	req := &types.FindAnagramsRequest{}
 	if err := c.BodyParser(req); err != nil {
 		return err
 	}
 
-	as := NewAnagramSearch(context.Background(), a.store, req.Datasource)
+	as := manager.NewAnagramSearch(context.Background(), a.store, req.Datasource)
 	err := as.ProcessURL(req.Datasource.RawUrl)
 	if err != nil {
 		return err

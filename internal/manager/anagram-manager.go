@@ -1,19 +1,23 @@
-package main
+package manager
 
 import (
 	"bufio"
 	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/tuanssm/anagram-finder/internal/store"
+	"github.com/tuanssm/anagram-finder/internal/types"
+	"github.com/tuanssm/anagram-finder/internal/util"
 )
 
 type AnagramSearch struct {
 	ctx   context.Context
-	store AnagramStore
-	ds    Datasource
+	store store.AnagramStore
+	ds    types.Datasource
 }
 
-func NewAnagramSearch(ctx context.Context, store AnagramStore, ds Datasource) *AnagramSearch {
+func NewAnagramSearch(ctx context.Context, store store.AnagramStore, ds types.Datasource) *AnagramSearch {
 	return &AnagramSearch{
 		ctx:   ctx,
 		store: store,
@@ -23,7 +27,7 @@ func NewAnagramSearch(ctx context.Context, store AnagramStore, ds Datasource) *A
 
 func (as *AnagramSearch) ProcessURL(url string) error {
 	lines := make(chan string)
-	entries := make(chan *AnagramEntry)
+	entries := make(chan *types.AnagramEntry)
 	errChan := make(chan error)
 
 	ctx, cancel := context.WithCancel(as.ctx)
@@ -65,7 +69,7 @@ func FetchLines(ctx context.Context, url string, lines chan<- string) error {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrFailedToFetch, err)
+		return fmt.Errorf("%w: %s", util.ErrFailedToFetch, err)
 	}
 	defer resp.Body.Close()
 
@@ -79,17 +83,17 @@ func FetchLines(ctx context.Context, url string, lines chan<- string) error {
 	}
 
 	if scanner.Err() != nil {
-		return fmt.Errorf("%w: %s", ErrFailedToFetch, scanner.Err())
+		return fmt.Errorf("%w: %s", util.ErrFailedToFetch, scanner.Err())
 	}
 
 	return nil
 }
 
-func ParseLines(ctx context.Context, lines <-chan string, entries chan<- *AnagramEntry) error {
+func ParseLines(ctx context.Context, lines <-chan string, entries chan<- *types.AnagramEntry) error {
 	defer close(entries)
 
 	for line := range lines {
-		entry := NewAnagramEntry(line)
+		entry := types.NewAnagramEntry(line)
 
 		select {
 		case <-ctx.Done():
@@ -101,11 +105,11 @@ func ParseLines(ctx context.Context, lines <-chan string, entries chan<- *Anagra
 	return nil
 }
 
-func InsertEntries(ctx context.Context, store *AnagramStore, coll string, entries <-chan *AnagramEntry) error {
+func InsertEntries(ctx context.Context, store *store.AnagramStore, coll string, entries <-chan *types.AnagramEntry) error {
 	for entry := range entries {
 		err := store.Insert(ctx, coll, entry)
 		if err != nil {
-			return fmt.Errorf("%w: %s", ErrFailedToInsert, err)
+			return fmt.Errorf("%w: %s", util.ErrFailedToInsert, err)
 		}
 	}
 

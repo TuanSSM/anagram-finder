@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+
+	"github.com/tuanssm/anagram-finder/internal/api"
 )
 
 func main() {
@@ -10,6 +12,6 @@ func main() {
 	listenAddr := ":8080"
 	mongoURI := "mongodb://mongodb:27017"
 
-	apiServer := NewApiServer()
+	apiServer := api.NewApiServer()
 	log.Fatal(apiServer.Start(listenAddr, mongoURI))
 }

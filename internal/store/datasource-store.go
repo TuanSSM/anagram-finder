@@ -1,4 +1,4 @@
-package main
+package store
 
 import (
 	"context"
@@ -6,12 +6,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/tuanssm/anagram-finder/internal/types"
 )
 
 type DatasourceStorer interface {
-	Insert(context.Context, *Datasource) error
-	GetByID(context.Context, string) (*Datasource, error)
-	GetAll(context.Context) ([]*Datasource, error)
+	Insert(context.Context, *types.Datasource) error
+	GetByID(context.Context, string) (*types.Datasource, error)
+	GetAll(context.Context) ([]*types.Datasource, error)
 }
 
 type DatasourceStore struct {
@@ -26,7 +28,7 @@ func NewDatasourceStore(db *mongo.Database) *DatasourceStore {
 	}
 }
 
-func (s *DatasourceStore) Insert(ctx context.Context, d *Datasource) error {
+func (s *DatasourceStore) Insert(ctx context.Context, d *types.Datasource) error {
 	res, err := s.db.Collection(s.coll).InsertOne(ctx, d)
 	if err != nil {
 		return err
@@ -36,22 +38,22 @@ func (s *DatasourceStore) Insert(ctx context.Context, d *Datasource) error {
 	return err
 }
 
-func (s *DatasourceStore) GetAll(ctx context.Context) ([]*Datasource, error) {
+func (s *DatasourceStore) GetAll(ctx context.Context) ([]*types.Datasource, error) {
 	cursor, err := s.db.Collection(s.coll).Find(ctx, map[string]any{})
 	if err != nil {
 		return nil, err
 	}
 
-	datasources := []*Datasource{}
+	datasources := []*types.Datasource{}
 	err = cursor.All(ctx, &datasources)
 	return datasources, err
 }
 
-func (s *DatasourceStore) GetByID(ctx context.Context, id string) (*Datasource, error) {
+func (s *DatasourceStore) GetByID(ctx context.Context, id string) (*types.Datasource, error) {
 	var (
 		objID, _ = primitive.ObjectIDFromHex(id)
 		res      = s.db.Collection(s.coll).FindOne(ctx, bson.M{"_id": objID})
-		d        = &Datasource{}
+		d        = &types.Datasource{}
 		err      = res.Decode(d)
 	)
 	return d, err

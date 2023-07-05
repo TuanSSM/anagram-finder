@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"context"
@@ -9,6 +9,9 @@ import (
 	"github.com/gofiber/template/html/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/tuanssm/anagram-finder/internal/handler"
+	"github.com/tuanssm/anagram-finder/internal/store"
 )
 
 type ApiServer struct {
@@ -35,9 +38,9 @@ func (s *ApiServer) Start(listenAddr, mongoUri string) error {
 		panic(err)
 	}
 
-	store := client.Database("anagram-finder")
-	dsStore := NewDatasourceStore(store)
-	dsHandler := NewDatasourceHandler(dsStore)
+	db := client.Database("anagram-finder")
+	dsStore := store.NewDatasourceStore(db)
+	dsHandler := handler.NewDatasourceHandler(dsStore)
 
 	// Routes
 	datasourceApp := app.Group("/datasource")
@@ -48,8 +51,8 @@ func (s *ApiServer) Start(listenAddr, mongoUri string) error {
 	//datasourceApp.Get("/:dictId/metrics", s.svc.getDictionaryMetrics)
 	//app.Post("/solve", s.handleFindAnagrams)
 
-	aStore := NewAnagramStore(store)
-	aHandler := NewAnagramHandler(*aStore)
+	aStore := store.NewAnagramStore(db)
+	aHandler := handler.NewAnagramHandler(*aStore)
 
 	app.Post("/find", aHandler.HandleFetchAnagramsFromUrl)
 

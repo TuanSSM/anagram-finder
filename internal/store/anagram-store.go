@@ -1,9 +1,10 @@
-package main
+package store
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/tuanssm/anagram-finder/internal/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,9 +12,9 @@ import (
 )
 
 type AnagramStorer interface {
-	Insert(context.Context, string, *AnagramEntry) error
-	GetByBitWeights(context.Context, string) (*AnagramEntry, error)
-	GetAll(context.Context) ([]*AnagramEntry, error)
+	Insert(context.Context, string, *types.AnagramEntry) error
+	GetByBitWeights(context.Context, string) (*types.AnagramEntry, error)
+	GetAll(context.Context) ([]*types.AnagramEntry, error)
 	Append(context.Context, string, string, int, []string) error
 	GetArrayAtIndex(context.Context, string, string, int) ([]string, error)
 }
@@ -28,7 +29,7 @@ func NewAnagramStore(db *mongo.Database) *AnagramStore {
 	}
 }
 
-func (s *AnagramStore) Insert(ctx context.Context, coll string, a *AnagramEntry) error {
+func (s *AnagramStore) Insert(ctx context.Context, coll string, a *types.AnagramEntry) error {
 	res, err := s.db.Collection(coll).InsertOne(ctx, a)
 	if err != nil {
 		return err
@@ -38,13 +39,13 @@ func (s *AnagramStore) Insert(ctx context.Context, coll string, a *AnagramEntry)
 	return err
 }
 
-func (s *AnagramStore) GetAll(ctx context.Context, coll string) ([]*AnagramEntry, error) {
+func (s *AnagramStore) GetAll(ctx context.Context, coll string) ([]*types.AnagramEntry, error) {
 	cursor, err := s.db.Collection(coll).Find(ctx, map[string]any{})
 	if err != nil {
 		return nil, err
 	}
 
-	anagrams := []*AnagramEntry{}
+	anagrams := []*types.AnagramEntry{}
 	err = cursor.All(ctx, &anagrams)
 	return anagrams, err
 }
