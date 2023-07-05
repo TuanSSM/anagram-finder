@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/tuanssm/anagram-finder/internal/store"
@@ -11,62 +12,55 @@ import (
 	"github.com/tuanssm/anagram-finder/internal/util"
 )
 
-type AnagramSearch struct {
-	ctx   context.Context
+type AnagramManager struct {
 	store store.AnagramStore
 	ds    types.Datasource
 }
 
-func NewAnagramSearch(ctx context.Context, store store.AnagramStore, ds types.Datasource) *AnagramSearch {
-	return &AnagramSearch{
-		ctx:   ctx,
+func NewAnagramManager(store store.AnagramStore, ds types.Datasource) *AnagramManager {
+	return &AnagramManager{
 		store: store,
 		ds:    ds,
 	}
 }
 
-func (as *AnagramSearch) ProcessURL(url string) error {
-	lines := make(chan string)
-	entries := make(chan *types.AnagramEntry)
-	errChan := make(chan error)
+func (as *AnagramManager) ProcessURL(url string) error {
+	ctx := context.Background()
 
-	ctx, cancel := context.WithCancel(as.ctx)
-	defer cancel() // ensure all paths cancel the context to avoid context leak
+	chunkSize := 1000
+	datach := make(chan string)
+	anagramch := make(chan *types.AnagramEntry)
+	errCh := make(chan error, 3)
+	log.Println("[ INFO ] Channels created.")
 
 	go func() {
-		defer close(lines)
-		if err := FetchLines(ctx, url, lines); err != nil {
-			errChan <- err
-			cancel()
+		log.Println("[ INFO ] Fetching Lines.")
+		if err := FetchLines(ctx, url, datach); err != nil {
+			errCh <- err
 		}
 	}()
 
 	go func() {
-		defer close(entries)
-		if err := ParseLines(ctx, lines, entries); err != nil {
-			errChan <- err
-			cancel()
+		log.Println("[ INFO ] Parsing Lines.")
+		if err := ParseLines(ctx, datach, anagramch); err != nil {
+			errCh <- err
+			return
 		}
 	}()
 
-	go func() {
-		if err := InsertEntries(ctx, &as.store, as.ds.Slug, entries); err != nil {
-			errChan <- err
-			cancel()
-		}
-	}()
+	log.Printf("[ INFO ] Inserting Anagrams to %s", as.ds.Slug)
+	go InsertManyEntries(ctx, &as.store, as.ds.Slug, anagramch, chunkSize)
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err() // context was canceled, return the reason
-	case err := <-errChan:
-		return err // received an error from one of the goroutines
+	for i := 0; i < 3; i++ {
+		if err := <-errCh; err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func FetchLines(ctx context.Context, url string, lines chan<- string) error {
-	defer close(lines)
-
+func FetchLines(ctx context.Context, url string, linech chan<- string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return fmt.Errorf("%w: %s", util.ErrFailedToFetch, err)
@@ -78,7 +72,7 @@ func FetchLines(ctx context.Context, url string, lines chan<- string) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case lines <- scanner.Text():
+		case linech <- scanner.Text():
 		}
 	}
 
@@ -89,25 +83,58 @@ func FetchLines(ctx context.Context, url string, lines chan<- string) error {
 	return nil
 }
 
-func ParseLines(ctx context.Context, lines <-chan string, entries chan<- *types.AnagramEntry) error {
-	defer close(entries)
-
-	for line := range lines {
-		entry := types.NewAnagramEntry(line)
+func ParseLines(ctx context.Context, linech <-chan string, anagramch chan<- *types.AnagramEntry) error {
+	i := 0
+	for line := range linech {
+		i++
+		if i%1000 == 0 {
+			log.Printf("Processed Line #%d: %s", i, line)
+		}
+		anagram := types.NewAnagramEntry(line)
 
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case entries <- entry:
+		case anagramch <- anagram:
 		}
 	}
 
 	return nil
 }
 
-func InsertEntries(ctx context.Context, store *store.AnagramStore, coll string, entries <-chan *types.AnagramEntry) error {
-	for entry := range entries {
-		err := store.Insert(ctx, coll, entry)
+func InsertManyEntries(ctx context.Context, store *store.AnagramStore, coll string, anagramch <-chan *types.AnagramEntry, chunkSize int) error {
+	var chunk []*types.AnagramEntry
+
+	i := 0
+	for anagram := range anagramch {
+		chunk = append(chunk, anagram)
+
+		if len(chunk) >= chunkSize {
+			err := store.BulkInsert(ctx, coll, chunk)
+			if err != nil {
+				return fmt.Errorf("%w: %s", util.ErrFailedToInsert, err)
+			}
+			log.Printf("Inserted chunk %d-%d to anagrams", (i*chunkSize + 1), (i+1)*chunkSize)
+			i++
+			chunk = nil
+		}
+	}
+
+	if len(chunk) > 0 {
+		err := store.BulkInsert(ctx, coll, chunk)
+		if err != nil {
+			return fmt.Errorf("%w: %s", util.ErrFailedToInsert, err)
+		}
+		log.Printf("Inserted remaining %d to anagrams", len(chunk))
+	}
+
+	return nil
+}
+
+func InsertEntries(ctx context.Context, store *store.AnagramStore, coll string, anagramch <-chan *types.AnagramEntry) error {
+	for anagram := range anagramch {
+		log.Printf("Anagram: %v", anagram)
+		err := store.Insert(ctx, coll, anagram)
 		if err != nil {
 			return fmt.Errorf("%w: %s", util.ErrFailedToInsert, err)
 		}

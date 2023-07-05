@@ -43,7 +43,7 @@ func NewAnagramSettings(req *FindAnagramsRequest) {
 
 type BitWeights struct {
 	EncodedBits uint32  `bson:"encodedBits"`
-	Weights     [26]int `bson:"encodedBits"`
+	Weights     [26]int `bson:"weights"`
 }
 
 func NewBitWeights(s string) *BitWeights {

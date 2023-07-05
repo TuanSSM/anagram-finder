@@ -13,6 +13,7 @@ import (
 
 type AnagramStorer interface {
 	Insert(context.Context, string, *types.AnagramEntry) error
+	BulkInsert(context.Context, string, []*types.AnagramEntry) error
 	GetByBitWeights(context.Context, string) (*types.AnagramEntry, error)
 	GetAll(context.Context) ([]*types.AnagramEntry, error)
 	Append(context.Context, string, string, int, []string) error
@@ -30,12 +31,46 @@ func NewAnagramStore(db *mongo.Database) *AnagramStore {
 }
 
 func (s *AnagramStore) Insert(ctx context.Context, coll string, a *types.AnagramEntry) error {
-	res, err := s.db.Collection(coll).InsertOne(ctx, a)
+	filter := bson.M{"encoded": a.Encoded}
+
+	update := bson.M{
+		"$setOnInsert": bson.M{
+			"encoded":      a.Encoded,
+			"combinations": a.Combinations,
+		},
+		"$addToSet": bson.M{
+			"anagrams": bson.M{
+				"$each": a.Anagrams,
+			},
+		},
+	}
+
+	upsert := true
+	opts := options.Update().SetUpsert(upsert)
+
+	res, err := s.db.Collection(coll).UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return err
 	}
-	a.ID = res.InsertedID.(primitive.ObjectID).Hex()
 
+	if res.UpsertedID != nil {
+		a.ID = res.UpsertedID.(primitive.ObjectID).Hex()
+	}
+
+	return nil
+}
+
+func (s *AnagramStore) BulkInsert(ctx context.Context, coll string, anagrams []*types.AnagramEntry) error {
+	documents := make([]interface{}, len(anagrams))
+	for i, a := range anagrams {
+		documents[i] = bson.M{
+			"encoded":      a.Encoded,
+			"anagrams":     a.Anagrams,
+			"combinations": a.Combinations,
+		}
+	}
+
+	_, err := s.db.Collection(coll).InsertMany(ctx, documents)
 	return err
 }
 

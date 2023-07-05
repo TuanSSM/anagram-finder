@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -37,6 +38,7 @@ func (s *ApiServer) Start(listenAddr, mongoUri string) error {
 	if err != nil {
 		panic(err)
 	}
+	log.Println("[ INFO ] Database connection established.")
 
 	db := client.Database("anagram-finder")
 	dsStore := store.NewDatasourceStore(db)
@@ -54,7 +56,7 @@ func (s *ApiServer) Start(listenAddr, mongoUri string) error {
 	aStore := store.NewAnagramStore(db)
 	aHandler := handler.NewAnagramHandler(*aStore)
 
-	app.Post("/find", aHandler.HandleFetchAnagramsFromUrl)
+	app.Post("/find", aHandler.HandleCreateAnagramsFromUrl)
 
 	err = app.Listen(listenAddr)
 
