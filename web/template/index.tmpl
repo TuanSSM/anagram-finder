@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anagram Finder</title>
-    <link rel="stylesheet" href="/assets/styles.css">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     <div class="container">
@@ -18,7 +18,7 @@
         <h2>Data Sources</h2>
         <form action="/solve" method="post">
             <ul>
-                {{ range $ds := .Datasources }}
+                {{ range $ds := . }}
                 <li>
                     <input type="radio" id="{{$ds.UUID}}" name="dictionaryId" value="{{$ds.UUID}}">
                     <label for="{{$ds.UUID}}">{{$ds.Name}}</label>

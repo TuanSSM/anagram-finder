@@ -4,10 +4,8 @@ services:
       build:
         context: .
         dockerfile: Dockerfile
-      image: localhost:5000/anagram-finder:latest
+      image: anagram-finder:latest
       container_name: anagram-finder
-      volumes:
-        - ./app/data:/data
       env_file:
         - .env
       ports:
@@ -15,7 +13,17 @@ services:
       restart: unless-stopped
       networks:
         - anagram-finder
+      depends_on:
+        - mongodb
+
+  mongodb:
+      image: mongo:latest
+      container_name: mongodb
+      ports:
+        - "${ANAGRAM_FINDER_DB_PORT:-27017}:${ANAGRAM_FINDER_DB_PORT:-27017}"
+      networks:
+        - anagram-finder
+      restart: unless-stopped
 
 networks:
   anagram-finder:
-    external: true

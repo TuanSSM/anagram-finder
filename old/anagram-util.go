@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"math/big"
 	"os"
 	"path/filepath"
 )
@@ -37,20 +36,20 @@ func (finder BaseAlgorithm) CombineLines(lines1, lines2 []string) []string {
 	return combinations
 }
 
-func (finder BaseAlgorithm) AppendResultFile(anagrams []string, r *big.Int) {
+func (finder BaseAlgorithm) AppendResultFile(anagrams []string, identifier string) {
 	nComb := len(anagrams[0])
 	var fPath string
 	// Seperate anagrams by number of words contained
 	if nComb == 1 {
-		fPath = fmt.Sprintf("%s/%s", finder.Settings.WorkDir(), r.String())
+		fPath = fmt.Sprintf("%s/%s", finder.Settings.WorkDir(), identifier)
 	} else {
-		fPath = fmt.Sprintf("%s/%d/%s", finder.Settings.WorkDir(), nComb, r.String())
+		fPath = fmt.Sprintf("%s/%d/%s", finder.Settings.WorkDir(), nComb, identifier)
 	}
 
 	AppendFile(fPath, anagrams)
 }
 
-func (finder BaseAlgorithm) SquashResultFiles() ([][]string, error) {
+func (finder BaseAlgorithm) SquashResultFiles() error {
 	wd := finder.Settings.WorkDir()
 	filepath.Walk(wd, func(path string, info os.FileInfo, err error) error {
 		//
@@ -75,4 +74,6 @@ func (finder BaseAlgorithm) SquashResultFiles() ([][]string, error) {
 
 		return nil
 	})
+
+	return nil
 }

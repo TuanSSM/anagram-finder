@@ -1,5 +1,5 @@
 build:
-	@go build -o ./bin/anagram-finder -v ./app/
+	@go build -o ./bin/anagram-finder -v ./cmd/anagram-finder
 
 run: build
 	./bin/anagram-finder
