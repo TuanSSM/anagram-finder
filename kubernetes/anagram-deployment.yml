@@ -17,7 +17,7 @@ spec:
       containers:
         - name: anagram-finder
           # TODO change image registry later
-          image: localhost:5000/anagram-finder:29june
+          image: tuanssm/anagram-finder
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
