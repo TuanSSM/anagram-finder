@@ -1,19 +1,24 @@
 package handler
 
 import (
+	"context"
+	"log"
+
 	"github.com/gofiber/fiber/v2"
-	"github.com/tuanssm/anagram-finder/internal/manager"
+	finder "github.com/tuanssm/anagram-finder/internal/manager"
 	"github.com/tuanssm/anagram-finder/internal/store"
 	"github.com/tuanssm/anagram-finder/internal/types"
 )
 
 type AnagramHandler struct {
-	store store.AnagramStore
+	store  store.AnagramStore
+	dstore store.DatasourceStorer
 }
 
-func NewAnagramHandler(aStore store.AnagramStore) *AnagramHandler {
+func NewAnagramHandler(aStore store.AnagramStore, dStore store.DatasourceStorer) *AnagramHandler {
 	return &AnagramHandler{
-		store: aStore,
+		store:  aStore,
+		dstore: dStore,
 	}
 }
 
@@ -23,16 +28,35 @@ func (a *AnagramHandler) HandleCreateAnagramsFromUrl(c *fiber.Ctx) error {
 		return err
 	}
 
-	am := manager.NewAnagramManager(a.store, req.Datasource)
-	err := am.ProcessURL(req.Datasource.RawUrl)
+	ctx := context.Background()
+	ds, err := a.dstore.GetByID(ctx, req.DatasourceId)
+	if err != nil {
+		return err
+	}
+	log.Printf("%v", ds)
+
+	af := finder.NewAnagramFinder(a.store, *ds)
+	err = af.ProcessURL(ctx, req.MaxWords)
 	if err != nil {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON("init ok")
+	return c.Status(fiber.StatusOK).JSON("Anagrams are being created, this operation might take a while")
 }
 
-//func (a *AnagramHandler) HandleGetAnagrams(c *fiber.Ctx) error {
-//	phrase := c.Params("phrase")
-//	res :=
-//}
+func (a *AnagramHandler) HandleGetAllAnagrams(c *fiber.Ctx) error {
+	id := c.Params("id")
+	ctx := context.Background()
+	ds, err := a.dstore.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	af := finder.NewAnagramFinder(a.store, *ds)
+	anagrams, err := af.GetAllAnagrams(ctx)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(anagrams)
+}

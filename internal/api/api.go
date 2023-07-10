@@ -48,15 +48,13 @@ func (s *ApiServer) Start(listenAddr, mongoUri string) error {
 	datasourceApp := app.Group("/datasource")
 	datasourceApp.Get("", dsHandler.HandleGetDatasources)
 	datasourceApp.Get(":id", dsHandler.HandleGetDatasourceByID)
-	//datasourceApp.Post("", dsHandler.HandlePostDatasource)
-	//datasourceApp.Get("/:uuid/content", s.handleGetDataSourceContent)
-	//datasourceApp.Get("/:dictId/metrics", s.svc.getDictionaryMetrics)
-	//app.Post("/solve", s.handleFindAnagrams)
+	datasourceApp.Post("", dsHandler.HandlePostDatasource)
 
 	aStore := store.NewAnagramStore(db)
-	aHandler := handler.NewAnagramHandler(*aStore)
+	aHandler := handler.NewAnagramHandler(*aStore, dsStore)
 
 	app.Post("/find", aHandler.HandleCreateAnagramsFromUrl)
+	app.Post("/result/:id", aHandler.HandleGetAllAnagrams)
 
 	err = app.Listen(listenAddr)
 

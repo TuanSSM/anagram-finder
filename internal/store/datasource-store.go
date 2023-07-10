@@ -11,7 +11,7 @@ import (
 )
 
 type DatasourceStorer interface {
-	Insert(context.Context, *types.Datasource) error
+	Insert(context.Context, *types.Datasource) (*types.Datasource, error)
 	GetByID(context.Context, string) (*types.Datasource, error)
 	GetAll(context.Context) ([]*types.Datasource, error)
 }
@@ -28,14 +28,14 @@ func NewDatasourceStore(db *mongo.Database) *DatasourceStore {
 	}
 }
 
-func (s *DatasourceStore) Insert(ctx context.Context, d *types.Datasource) error {
+func (s *DatasourceStore) Insert(ctx context.Context, d *types.Datasource) (*types.Datasource, error) {
 	res, err := s.db.Collection(s.coll).InsertOne(ctx, d)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	d.ID = res.InsertedID.(primitive.ObjectID).Hex()
 
-	return err
+	return d, err
 }
 
 func (s *DatasourceStore) GetAll(ctx context.Context) ([]*types.Datasource, error) {
