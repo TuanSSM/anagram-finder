@@ -29,11 +29,11 @@ func NewDatasourceStore(db *mongo.Database) *DatasourceStore {
 }
 
 func (s *DatasourceStore) Insert(ctx context.Context, d *types.Datasource) (*types.Datasource, error) {
-	res, err := s.db.Collection(s.coll).InsertOne(ctx, d)
+	d.ID = primitive.NewObjectID().Hex()
+	_, err := s.db.Collection(s.coll).InsertOne(ctx, d)
 	if err != nil {
 		return nil, err
 	}
-	d.ID = res.InsertedID.(primitive.ObjectID).Hex()
 
 	return d, err
 }

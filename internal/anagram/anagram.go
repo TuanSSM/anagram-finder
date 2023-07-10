@@ -48,10 +48,6 @@ func (af *AnagramFinder) ProcessURL(ctx context.Context, maxWords int) error {
 	anagCh := af.AddAnagramsToChannel(ctx, namesCh, errCh)
 	go af.BulkInsertAnagrams(ctx, 10000, anagCh, errCh)
 
-	//for a := range anagCh {
-	//	log.Printf("%v", a)
-	//}
-
 	for err := range errCh {
 		if err != nil {
 			return err
