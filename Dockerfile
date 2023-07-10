@@ -4,10 +4,11 @@ COPY . .
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux make build
 
-FROM scratch
-WORKDIR /
-COPY --from=builder /app/bin/anagram-finder .
-COPY --from=builder /app/web ./
+#FROM scratch
+#WORKDIR /
+#COPY --from=builder /app/bin/anagram-finder .
+#COPY --from=builder /app/web ./
 
 ENV ANAGRAM_FINDER_API_PORT=${ANAGRAM_FINDER_API_PORT:-3000}
-CMD ["./anagram-finder"]
+EXPOSE ${ANAGRAM_FINDER_API_PORT}
+CMD ["./bin/anagram-finder"]

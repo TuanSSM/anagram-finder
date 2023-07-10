@@ -16,8 +16,7 @@ spec:
     spec:
       containers:
         - name: anagram-finder
-          # TODO change image registry later
           image: tuanssm/anagram-finder
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080

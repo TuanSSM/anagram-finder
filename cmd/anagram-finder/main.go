@@ -2,14 +2,15 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/tuanssm/anagram-finder/internal/api"
 )
 
 func main() {
-	listenAddr := ":" + os.Getenv("ANAGRAM_FINDER_API_PORT")
-	mongoURI := os.Getenv("MONGO_URI")
+	listenAddr := ":8080"                         //os.Getenv("ANAGRAM_FINDER_API_PORT")
+	mongoURI := "mongodb://mongodb-service:27017" //os.Getenv("MONGO_URI")
+
+	log.Printf("MONGO URI: %v", mongoURI)
 
 	apiServer := api.NewApiServer()
 	log.Fatal(apiServer.Start(listenAddr, mongoURI))

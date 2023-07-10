@@ -279,17 +279,17 @@ func (af AnagramFinder) BulkInsertAnagrams(ctx context.Context, chunkSize int, a
 	}
 }
 
-func (af AnagramFinder) InsertEntries(ctx context.Context, coll string, anagramch <-chan *types.AnagramEntry) error {
-	for anagram := range anagramch {
-		log.Printf("Anagram: %v", anagram)
-		err := af.store.Insert(ctx, coll, anagram)
-		if err != nil {
-			return fmt.Errorf("%w: %s", util.ErrFailedToInsert, err)
-		}
-	}
-
-	return nil
-}
+//func (af AnagramFinder) InsertEntries(ctx context.Context, coll string, anagramch <-chan *types.AnagramEntry) error {
+//	for anagram := range anagramch {
+//		log.Printf("Anagram: %v", anagram)
+//		err := af.store.Insert(ctx, coll, anagram)
+//		if err != nil {
+//			return fmt.Errorf("%w: %s", util.ErrFailedToInsert, err)
+//		}
+//	}
+//
+//	return nil
+//}
 
 func (af AnagramFinder) GetAllAnagrams(ctx context.Context) ([]*types.AnagramEntry, error) {
 	anagrams, err := af.store.GetAll(ctx, af.ds.Slug)
