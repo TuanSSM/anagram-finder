@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
-	finder "github.com/tuanssm/anagram-finder/internal/manager"
+	"github.com/tuanssm/anagram-finder/internal/anagram"
 	"github.com/tuanssm/anagram-finder/internal/store"
 	"github.com/tuanssm/anagram-finder/internal/types"
 )
@@ -35,7 +35,7 @@ func (a *AnagramHandler) HandleCreateAnagramsFromUrl(c *fiber.Ctx) error {
 	}
 	log.Printf("%v", ds)
 
-	af := finder.NewAnagramFinder(a.store, *ds)
+	af := anagram.NewAnagramFinder(a.store, *ds)
 	err = af.ProcessURL(ctx, req.MaxWords)
 	if err != nil {
 		return err
@@ -52,7 +52,7 @@ func (a *AnagramHandler) HandleGetAllAnagrams(c *fiber.Ctx) error {
 		return err
 	}
 
-	af := finder.NewAnagramFinder(a.store, *ds)
+	af := anagram.NewAnagramFinder(a.store, *ds)
 	anagrams, err := af.GetAllAnagrams(ctx)
 	if err != nil {
 		return err

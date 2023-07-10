@@ -158,7 +158,12 @@ func (a *AnagramEntry) Combine(other *AnagramEntry) *AnagramEntry {
 	for _, a1 := range a.Anagrams {
 		var variations []string
 		for _, a2 := range other.Anagrams {
-			variation := strings.Join([]string{a1, a2}, " ")
+			var variation string
+			if a1 == "" {
+				variation = strings.Join([]string{a1, a2}, "")
+			} else {
+				variation = strings.Join([]string{a1, a2}, " ")
+			}
 			variations = append(variations, variation)
 		}
 		news = append(news, strings.Join(variations, ";"))

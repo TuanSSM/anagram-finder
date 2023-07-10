@@ -12,7 +12,7 @@ Aim is to build a kubernetes compliant Anagram Finder Microservice, providing mu
 
 ### Part 1
 
-API takes a JSON Request object for fetching new datasource.
+API takes a JSON Request object for creating new datasource item on database.
 
 `Request` validation achieved with `fiber`, `Ctx`, and `BodyParser` functions.
 
@@ -24,41 +24,18 @@ API takes a JSON Request object for finding anagrams.
 
 - Iterates over datasource lines, with given Strategy
 
-#### Prime Multiplication Strategy
-
-By making use of Fundamental Theorem of Algebra,
-
-+ Assign a prime number for each letter in the alphabet with considering dictionary frequencies
-+ Multiply each letter with it's corresponding prime number, in order to obtain an unique number for equivalent anagrams
-
-+ Pros
-  - Does not need sorting
-+ Cons
-  - Unique numbers get exponentially larger as anagrams spread into words
-
-#### Bit Encoded Matching Strategy
+#### Strategy
 
 ##### Encoding 
-`string`s are encoded into a 27 boolean bits & weights list
+`string`s are encoded into a 27 boolean bits &  27 integer weights array
 
 `AlphabetBools`: 27 boolean bits for each letter in alphabet including `'`, characters with higher frequency are assigned to more significant bitweights array for each letter
 
-##### Mathcing Anagrams
-1. Check equivalence of `AlphabetBools`
-2. If True check equivalence of `Weights`
-3. Both True => Anagram found
-
-+ Pros
-  - Low memory usage
+Input lines and combined lines with same boolean bits are stored in the same `<uint32>.json` files. Anagrams are appended to corresponding `weights`.
 
 ### Part 3
 
-DB connection will be implemented
-
-1. Write singleton anagrams (only one word) ~~to a file with unique anagram identifier, one word per line.~~
-2. Generate 2 word anagrams, repeat same write procedure with a combined anagram ~~per line in a directory with name number of words~~
-3. By making use of last generated n word anagrams and singleton anagrams, generate n+1 word anagrams.
-4. ~~Squash files with same name as lines with a delimeter to a single result file~~
+json files in the `data/<datasource-slug-id>` directory is read concurrently and entries having anagrams are inserted to database in batches.
 
 ## Building
 
@@ -79,26 +56,3 @@ docker-compose up -d
 ```bash
 
 ```
-
-## TODO
-
-- [ ] App
- + [ ] Strategies
-   - [x] `PrimeMultiplication`
-   - [ ] `BitwiseMatching`
-   - [ ] ~~LettersSorted~~
- + [x] API
-   - [x] `DataSource` handlers
-   - [x] `FindAnagrams` handler
- + [ ] Mongodb
- + [ ] Unit Test
- + [ ] Bounded concurrency, semaphores
-- [ ] Kubernetes
-  + [x] Minimal Docker image
-  + [x] Kubernetes configuration
-  + [ ] Helm chart
-- [ ] Further Improvements
-  + [x] README.md
-  + [ ] Linting
-  + [ ] Swagger
-  + [ ] `Bombardier` benchmark
