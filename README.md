@@ -54,5 +54,5 @@ docker-compose up -d
 ### Running with Kubernetes
 
 ```bash
-
+kubectl apply -f kubernetes/
 ```
